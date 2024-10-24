@@ -14,14 +14,13 @@ def get_random_animal_image(animal: str) -> str:
 
 
 def n(rating: str) -> str:
-    if rating == 'A':
+    if rating == 'A' or 'S' in rating:
         return 'n'
     else:
         return ''
 
 def create_animal_embed(url: str) -> discord.Embed:
     rating = get_rating()
-    color = RATING_MAPPINGS[rating]["color"]
     embed = discord.Embed(color=RATING_MAPPINGS[rating]["color"],
                           title=f'Congratulations!',
                           description=f'You rolled a{n(rating)} **{rating}** tier animal.')
@@ -30,8 +29,8 @@ def create_animal_embed(url: str) -> discord.Embed:
 
 
 def get_rating() -> str:
-    ratings = ['SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'A', 'B', 'C', 'D']
-    weights = [0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.4, 0.2, 0.1, 0.05]
+    ratings = [x for x in RATING_MAPPINGS]
+    weights = [RATING_MAPPINGS[x]["weight"] for x in RATING_MAPPINGS]
     random_rating = np.random.choice(ratings, 1, p=weights)
     return str(random_rating[0])
 
