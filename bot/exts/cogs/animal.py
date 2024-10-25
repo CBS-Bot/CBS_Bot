@@ -56,7 +56,7 @@ class AnimalsCog(commands.Cog):
 
     @commands.hybrid_command(name="truerandomanimal", description="Get a COMPLETELY random animal image. "
                                                                   "1 time/user/day.")
-    @commands.cooldown(1, 1, commands.BucketType.member)
+    @commands.cooldown(1, 86400, commands.BucketType.member)
     async def true_random_animal(self, ctx) -> None:
         random_animal = random.choice(get_args(ANIMAL_LITERAL))
         url = get_random_animal_image(random_animal)
