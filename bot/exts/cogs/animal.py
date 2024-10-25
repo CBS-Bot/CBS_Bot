@@ -3,9 +3,10 @@ import logging
 import random
 import requests
 import numpy as np
+from discord import Embed, File
 from discord.ext import commands
-from typing import get_args
-from bot.resources.models.animals import ANIMAL_LITERAL, RATING_MAPPINGS
+from typing import get_args, Tuple
+from bot.resources.models.animals import ANIMAL_LITERAL, RATING_MAPPINGS, RATING_IMAGE_DIR
 
 
 def get_random_animal_image(animal: str) -> str:
@@ -19,13 +20,16 @@ def n(rating: str) -> str:
     else:
         return ''
 
-def create_animal_embed(url: str) -> discord.Embed:
+def create_animal_embed(url: str) -> tuple[Embed, File]:
     rating = get_rating()
+    rating_filename = RATING_MAPPINGS[rating]["filename"]
+    rating_file = discord.File(f"{RATING_IMAGE_DIR}{rating_filename}", filename="thumbnail.png")
     embed = discord.Embed(color=RATING_MAPPINGS[rating]["color"],
                           title=f'Congratulations!',
                           description=f'You rolled a{n(rating)} **{rating}** tier animal.')
+    embed.set_thumbnail(url=f"attachment://thumbnail.png")
     embed.set_image(url=url)
-    return embed
+    return embed, rating_file
 
 
 def get_rating() -> str:
@@ -52,11 +56,12 @@ class AnimalsCog(commands.Cog):
 
     @commands.hybrid_command(name="truerandomanimal", description="Get a COMPLETELY random animal image. "
                                                                   "1 time/user/day.")
-    @commands.cooldown(1, 86400, commands.BucketType.member)
+    @commands.cooldown(1, 1, commands.BucketType.member)
     async def true_random_animal(self, ctx) -> None:
         random_animal = random.choice(get_args(ANIMAL_LITERAL))
         url = get_random_animal_image(random_animal)
-        await ctx.send(embed=create_animal_embed(url))
+        embed, rating_file = create_animal_embed(url)
+        await ctx.send(embed=embed, file=rating_file)
 
     @random_animal.error
     @possum.error
