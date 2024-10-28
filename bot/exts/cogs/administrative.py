@@ -2,10 +2,7 @@ import logging
 import discord
 from discord.ext import commands
 from bot.exts.database import set_bot_messages_ability
-
-
-async def is_owner_or_admin(ctx) -> bool:
-    return await ctx.bot.is_owner(ctx.author) or await ctx.permissions.administrator
+from bot.utils.permissionutils import is_owner_or_admin
 
 
 class AdministrativeCog(commands.Cog):

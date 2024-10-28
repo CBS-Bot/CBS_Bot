@@ -3,10 +3,11 @@ import logging
 import random
 import requests
 import numpy as np
-from discord import Embed, File
+from discord import Embed, File, Member
 from discord.ext import commands
 from typing import get_args, Tuple
 from bot.resources.models.animals import ANIMAL_LITERAL, RATING_MAPPINGS, RATING_IMAGE_DIR
+from bot.utils.permissionutils import is_owner_or_admin
 
 
 def get_random_animal_image(animal: str) -> str:
@@ -62,6 +63,15 @@ class AnimalsCog(commands.Cog):
         url = get_random_animal_image(random_animal)
         embed, rating_file = create_animal_embed(url)
         await ctx.send(embed=embed, file=rating_file)
+
+    @commands.hybrid_command(name="resetanimalcooldown", description="(Owner/Admin only) Resets a user's cooldown for "
+                                                                     "/truerandomanimal.")
+    async def reset_true_random_animal(self, ctx, member: Member) -> None:
+        if await is_owner_or_admin(ctx):
+            ctx.author = member
+            ctx.message.author = member
+            self.true_random_animal.reset_cooldown(ctx)
+            await ctx.send(f"Resetted True Random Animal cooldown for member {member.name}.", ephemeral=True)
 
     @random_animal.error
     @possum.error
