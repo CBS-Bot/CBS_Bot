@@ -6,8 +6,10 @@ import requests
 import numpy as np
 from dateutil import tz
 from discord.ext import tasks, commands
-from typing import get_args
-from bot.resources.models.animals import ANIMAL_LITERAL, RATING_MAPPINGS
+from discord import Embed, File, Member
+from typing import get_args, Tuple
+from bot.resources.models.animals import ANIMAL_LITERAL, RATING_MAPPINGS, RATING_IMAGE_DIR
+from bot.utils.permissionutils import is_owner_or_admin
 
 RESET_TIME = datetime.time(hour=5, minute=0) # Reset at midnight (5AM UTC)
 
@@ -17,24 +19,26 @@ def get_random_animal_image(animal: str) -> str:
 
 
 def n(rating: str) -> str:
-    if rating == 'A':
+    if rating == 'A' or 'S' in rating:
         return 'n'
     else:
         return ''
 
-def create_animal_embed(url: str) -> discord.Embed:
+def create_animal_embed(url: str) -> tuple[Embed, File]:
     rating = get_rating()
-    color = RATING_MAPPINGS[rating]["color"]
+    rating_filename = RATING_MAPPINGS[rating]["filename"]
+    rating_file = discord.File(f"{RATING_IMAGE_DIR}{rating_filename}", filename="thumbnail.png")
     embed = discord.Embed(color=RATING_MAPPINGS[rating]["color"],
                           title=f'Congratulations!',
                           description=f'You rolled a{n(rating)} **{rating}** tier animal.')
+    embed.set_thumbnail(url=f"attachment://thumbnail.png")
     embed.set_image(url=url)
-    return embed
+    return embed, rating_file
 
 
 def get_rating() -> str:
-    ratings = ['SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'A', 'B', 'C', 'D']
-    weights = [0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.4, 0.2, 0.1, 0.05]
+    ratings = [x for x in RATING_MAPPINGS]
+    weights = [RATING_MAPPINGS[x]["weight"] for x in RATING_MAPPINGS]
     random_rating = np.random.choice(ratings, 1, p=weights)
     return str(random_rating[0])
 
@@ -69,7 +73,17 @@ class AnimalsCog(commands.Cog):
     async def true_random_animal(self, ctx) -> None:
         random_animal = random.choice(get_args(ANIMAL_LITERAL))
         url = get_random_animal_image(random_animal)
-        await ctx.send(embed=create_animal_embed(url))
+        embed, rating_file = create_animal_embed(url)
+        await ctx.send(embed=embed, file=rating_file)
+
+    @commands.hybrid_command(name="resetanimalcooldown", description="(Owner/Admin only) Resets a user's cooldown for "
+                                                                     "/truerandomanimal.")
+    async def reset_true_random_animal(self, ctx, member: Member) -> None:
+        if await is_owner_or_admin(ctx):
+            ctx.author = member
+            ctx.message.author = member
+            self.true_random_animal.reset_cooldown(ctx)
+            await ctx.send(f"Resetted True Random Animal cooldown for member {member.name}.", ephemeral=True)
 
     @random_animal.error
     @possum.error
