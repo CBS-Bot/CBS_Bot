@@ -4,10 +4,13 @@ import logging
 import random
 import requests
 import numpy as np
-from dateutil import tz
 from discord.ext import tasks, commands
-from discord import Embed, File, Member
-from typing import get_args, Tuple
+from discord import Embed, File, Member, Message, TextChannel
+from typing import get_args
+
+from discord.ext.commands.view import StringView
+from discord.state import ConnectionState
+
 from bot.resources.models.animals import ANIMAL_LITERAL, RATING_MAPPINGS, RATING_IMAGE_DIR
 from bot.utils.permissionutils import is_owner_or_admin
 
@@ -49,13 +52,21 @@ class AnimalsCog(commands.Cog):
         self._last_member = None
         self.reset_animal_commands.start()
 
-    @tasks.loop(time=RESET_TIME)
+    @tasks.loop(seconds=10)
     async def reset_animal_commands(self):
         logging.warning(f"Daily animal reset has activated.")
-        animals_cog = self.bot.get_cog("AnimalsCog")
-        for command in animals_cog.walk_commands():
-            logging.warning(f"Resetting cooldown of command {command.name}.")
-            command.cooldown.reset()
+
+        for guild in self.bot.guilds:
+            for member in guild.members:
+                msg = Message()
+                msg.author = member
+                ctx = commands.Context(
+                    bot=self.bot,
+                    message=msg,
+                    view=StringView("")
+                )
+                print(member.id)
+                self.true_random_animal.reset_cooldown(ctx)
 
     @commands.hybrid_command(name="possum", description="Get a random possum image. 1 time/user/day.")
     @commands.cooldown(1, 86400, commands.BucketType.member)
