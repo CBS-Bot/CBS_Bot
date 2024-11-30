@@ -27,13 +27,13 @@ def get_match_term(match_type: MatchType) -> str:
         logging.warning("Unknown match type.")
 
 
-def get_match_type(message: discord.Message) -> MatchType:
+def get_match_type(message: str) -> MatchType:
     # Figure out what type of match the message has
-    if re.search(CBS_REGEX, unidecode(message.content)):
+    if re.search(CBS_REGEX, unidecode(message)):
         return MatchType.CBS
-    elif re.search(R1_REGEX, unidecode(message.content)):
+    elif re.search(R1_REGEX, unidecode(message)):
         return MatchType.ROUNDONE
-    elif re.search(CHUNITHM_REGEX, unidecode(message.content)):
+    elif re.search(CHUNITHM_REGEX, unidecode(message)):
         return MatchType.CHUNITHM
     else:
         return MatchType.NO_MATCH
@@ -63,18 +63,22 @@ def get_match_message(match_type: MatchType, timestring: str) -> str:
         logging.warning("Unknown match type.")
 
 
-def is_match(message: discord.Message):
+def is_match(message: str):
     # There's a match if the enum's int value is 0 or better. TODO: Is there a better way to do this?
     return int(get_match_type(message)) > 0
 
+def sanitize_message(message: str):
+    # For now, just remove emoji
+    return re.sub(r"<a?:([a-zA-Z0-9_-]{1,32}):[0-9]{17,21}>", "", message)
 
 async def check_message_for_matches(ctx):
     # Check for a match, if it matches, send an appropriate message
-    if is_match(ctx.message):
+    sanitized_message = sanitize_message(ctx.message.content)
+    if is_match(sanitized_message):
         # Note: Unfortunately the Discord.py message object doesn't really play well with serialization or MongoDB,
         # so we have to create our own dictionary. Yuck.
-        match_type = get_match_type(ctx.message)
-        match_data = {"message_id": ctx.message.id, "message": ctx.message.content, "match_type": str(match_type),
+        match_type = get_match_type(sanitized_message)
+        match_data = {"message_id": ctx.message.id, "message": sanitized_message, "match_type": str(match_type),
                       "author_id": ctx.message.author.id,
                       "author": ctx.message.author.display_name, "author_username": ctx.message.author.name,
                       "created_at": ctx.message.created_at, "channel_id": ctx.message.channel.id,
@@ -98,20 +102,20 @@ async def check_message_for_matches(ctx):
                 #  an interaction, and this flow does not count as an interaction.
                 logging.warning(
                     f"Match found, but not sent due to cooldown. Match type: {match_type}. "
-                    f"Message: {ctx.message.content}. Guild: {ctx.message.guild.id}.")
+                    f"Message: {sanitized_message}. Guild: {ctx.message.guild.id}.")
                 pass
             else:
-                logging.warning(f"Match found, and sent. Match type: {match_type}. Message: {ctx.message.content}. "
+                logging.warning(f"Match found, and sent. Match type: {match_type}. Message: {sanitized_message}. "
                                 f"Guild: {ctx.message.guild.id}.")
                 await ctx.send(match_message)
         else:
             logging.warning(
-                f"Match found for the first time. Match type: {match_type}. Message: {ctx.message.content}. "
+                f"Match found for the first time. Match type: {match_type}. Message: {sanitized_message}. "
                 f"Guild: {ctx.message.guild.id}.")
             init_message = get_match_initmessage(match_type)
             await ctx.send(init_message)
 
         # Save the data to the MongoDB database
         insert_match_data(match_data)
-        logging.warning(f"Message inserted into database. Message: {ctx.message.content}. "
+        logging.warning(f"Message inserted into database. Message: {sanitized_message}. "
                         f"Guild: {ctx.message.guild.id}.")
