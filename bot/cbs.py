@@ -5,7 +5,7 @@ import os
 from discord.ext import commands
 from dotenv import load_dotenv
 
-# local imports 
+# local imports
 import bot.exts.database as database
 from bot.exts.cogs.administrative import AdministrativeCog
 from bot.exts.cogs.animal import AnimalsCog
