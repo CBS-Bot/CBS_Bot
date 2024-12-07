@@ -8,26 +8,21 @@ from discord.ext import commands
 from typing import get_args, Tuple
 from bot.resources.models.animals import ANIMAL_LITERAL, RATING_MAPPINGS, RATING_IMAGE_DIR
 from bot.utils.permissionutils import is_owner_or_admin
+from bot.utils.indefinitearticles import indefinite_article
 
 
 def get_random_animal_image(animal: str) -> str:
     response = requests.get("https://api.tinyfox.dev/img.json", {'animal': animal})
     return "https://api.tinyfox.dev" + response.json().get("loc")
 
-
-def n(rating: str) -> str:
-    if rating == 'A' or 'S' in rating:
-        return 'n'
-    else:
-        return ''
-
 def create_animal_embed(url: str) -> tuple[Embed, File]:
     rating = get_rating()
     rating_filename = RATING_MAPPINGS[rating]["filename"]
     rating_file = discord.File(f"{RATING_IMAGE_DIR}{rating_filename}", filename="thumbnail.png")
+    a_or_an = indefinite_article(rating)
     embed = discord.Embed(color=RATING_MAPPINGS[rating]["color"],
                           title=f'Congratulations!',
-                          description=f'You rolled a{n(rating)} **{rating}** tier animal.')
+                          description=f'You rolled {a_or_an} **{rating}** tier animal.')
     embed.set_thumbnail(url=f"attachment://thumbnail.png")
     embed.set_image(url=url)
     return embed, rating_file

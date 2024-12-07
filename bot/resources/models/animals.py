@@ -7,7 +7,11 @@ ANIMAL_LITERAL = Literal["fox", "yeen", "dog", "manul", "snek", "poss", "serval"
                          "shiba", "racc", "dook", "ott", "snep", "woof", "capy", "bear", "bun",
                          "caracal", "puma", "mane", "marten", "wah", "skunk", "jaguar", "yote"]
 
-RATING_MAPPINGS = {"SSSS":  {"weight": 0.005, "color": discord.Color.from_rgb(192, 215, 255),
+RATING_MAPPINGS = {"MANWICH":{"weight": 0.001, "color": discord.Color.from_rgb(241, 216, 97),
+                             "filename": "Manwich.png"},
+                   "COOLS":  {"weight": 0.003, "color": discord.Color.from_rgb(175, 187, 207),
+                             "filename": "CoolS.png"},
+                   "SSSS":  {"weight": 0.005, "color": discord.Color.from_rgb(192, 215, 255),
                              "filename": "SSSS.png"},
                    "SSS+":  {"weight": 0.010, "color": discord.Color.from_rgb(255, 255, 255),
                              "filename": "SSSplus.png"},
@@ -27,7 +31,7 @@ RATING_MAPPINGS = {"SSSS":  {"weight": 0.005, "color": discord.Color.from_rgb(19
                              "filename": "B.png"},
                    "C":     {"weight": 0.150, "color": discord.Color.from_rgb(102, 255, 51),
                              "filename": "C.png"},
-                   "D":     {"weight": 0.100, "color": discord.Color.from_rgb(166, 166, 166),
+                   "D":     {"weight": 0.096, "color": discord.Color.from_rgb(166, 166, 166),
                              "filename": "D.png"}}
 
 RATING_IMAGE_DIR = ROOT_DIR + "/bot/resources/media/ratings/"
