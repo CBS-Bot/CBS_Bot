@@ -194,8 +194,23 @@ class ThreeIceCreamStrategy(FncStrategy):
     async def get_song(self, **kwargs):
         return next(x for x in SONG_LIST if x.song_name.lower() == kwargs["title"].lower())
 
+    async def get_difficulties(self, **kwargs):
+        raise NotImplementedError
+
     async def get_difficulty(self, **kwargs):
         return kwargs["difficulty"]
+
+    async def get_tables(self, **kwargs):
+        raise NotImplementedError
+
+    async def get_table(self, **kwargs):
+        raise NotImplementedError
+
+    async def get_folders(self, **kwargs):
+        raise NotImplementedError
+
+    async def get_folder(self, **kwargs):
+        raise NotImplementedError
 
     @staticmethod
     async def map_ratings_to_dict(rating_list: list[int]) -> dict[int, dict[str, str | int]]:

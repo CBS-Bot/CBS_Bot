@@ -266,7 +266,32 @@ class FncStrategy(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_difficulties(self, **kwargs):
+        # Gets the information about all Difficulties for the given Song. This is used for autocompletion.
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_difficulty(self, **kwargs):
         # Gets the information about a single Difficulty object based on a selected Song
         # (the Difficulty object may look different from game to game).
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_tables(self, **kwargs):
+        # Gets the information about all Table objects. This is specific to the BMS implementation.
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_table(self, **kwargs):
+        # Gets the information about one Table object. This is specific to the BMS implementation.
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_folders(self, **kwargs):
+        # Gets the information about all Folder objects. This is specific to the BMS implementation.
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_folder(self, **kwargs):
+        # Gets the information about one Folder object. This is specific to the BMS implementation.
         raise NotImplementedError

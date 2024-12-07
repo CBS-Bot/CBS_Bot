@@ -1,0 +1,183 @@
+import discord
+import logging
+import msgspec
+import os
+import requests
+import re
+from discord import Embed
+from unidecode import unidecode
+
+from bot.resources.fnc.fncstrategy import FncStrategy
+from bot.resources.fnc.bms.bmsviewerfncmodels import Song, Chart, Table, Folder, JSON_DIR
+from bot.resources.fnc.fncconstants import DEFAULT_BARCLIP, BARCLIP_REGEX, SONG_DATA_FOLDER, OUTPUT_FILE_NAME, \
+    SDVXPLUS_CLOUDFRONT
+
+with open(f"{JSON_DIR}charts-bms.json") as chart_json:
+    chart_json_data = chart_json.read()
+with open(f"{JSON_DIR}songs-bms.json") as song_json:
+    song_json_data = song_json.read()
+with open(f"{JSON_DIR}tables.json") as table_json:
+    table_json_data = table_json.read()
+with open(f"{JSON_DIR}folders.json") as folder_json:
+    folder_json_data = folder_json.read()
+
+# this is done because i have no idea how to deal with these weird characters
+# todo: how do we make msgspec handle these more gracefully instead of having to substitute them?
+folder_json_data = re.sub(r'~elemMatch', 'elemMatch', folder_json_data)
+folder_json_data = re.sub(r'data¬tableFolders', 'datatableFolders', folder_json_data)
+
+BMS_CHARTS: list[Chart] = msgspec.json.decode(chart_json_data, type=list[Chart])
+BMS_SONGS: list[Song] = msgspec.json.decode(song_json_data, type=list[Song])
+TABLES: list[Table] = msgspec.json.decode(table_json_data, type=list[Table]) # todo: move as this is for all games?
+FOLDERS: list[Folder] = msgspec.json.decode(folder_json_data, type=list[Folder]) # todo: move as this is for all games?
+
+
+class BmsViewerFncStrategy(FncStrategy):
+    def __init__(self, x1_left_px, x2_left_px, y1_bottom_px, y2_bottom_px, spacing_px, doubles_spacing_px,
+                 bottom_cutoff_px, ocr_scale_multiplier, measure_oob_tol, game_title):
+        super(BmsViewerFncStrategy, self).__init__(x1_left_px, x2_left_px, y1_bottom_px, y2_bottom_px, spacing_px,
+                                                  doubles_spacing_px, bottom_cutoff_px, ocr_scale_multiplier,
+                                                  measure_oob_tol, game_title)
+        pass
+
+    async def execute_strategy(self, ctx, **kwargs):
+        return await super(BmsViewerFncStrategy, self).execute_strategy(ctx, **kwargs)
+
+    async def map_chart_name(self, **kwargs) -> str:
+        return await super(BmsViewerFncStrategy, self).map_chart_name(**kwargs)
+
+    async def get_barclip(self, bar_clip: str):
+        return await super(BmsViewerFncStrategy, self).get_barclip(bar_clip)
+
+    async def map_chart_type(self, **kwargs) -> str:
+        # Not needed for Plus.
+        raise NotImplementedError
+
+    async def map_chart_filename(self, **kwargs) -> str:
+        return f"{kwargs['song'].id}-{kwargs['difficulty'].idx}"
+
+    async def download_image_file(self, **kwargs) -> str:
+        song = kwargs["song"]
+        difficulty = kwargs["difficulty"]
+
+        image = requests.get(f'{SDVXPLUS_CLOUDFRONT}{str(song.id).zfill(4)}/r_{difficulty.idx}.png').content
+        path = (f'{SONG_DATA_FOLDER}{self.game_title}/{str(song.id).zfill(4)}/'
+                f'{await self.map_chart_filename(song=song, difficulty=difficulty)}.png')
+        if not os.path.isfile(path):
+            # Cache the file if it doesn't exist.
+            os.makedirs(f'{SONG_DATA_FOLDER}{self.game_title}/{str(song.id).zfill(4)}/', exist_ok=True)
+            with open(path, "wb") as handler:
+                handler.write(image)
+        else:
+            logging.warning(f"Cached file already found, using file {path}.")
+        return path
+
+    async def use_doubles_spacing(self, **kwargs):
+        return await super(BmsViewerFncStrategy, self).use_doubles_spacing(**kwargs)
+
+    async def get_measure_numbers_from_image(self, file_path: str, use_doubles_spacing: bool) -> dict[int, int]:
+        return await super(BmsViewerFncStrategy, self).get_measure_numbers_from_image(file_path, use_doubles_spacing)
+
+    async def adjust_measures(self, column_dict: dict[int, int]) -> dict[int, int]:
+        return await super(BmsViewerFncStrategy, self).adjust_measures(column_dict)
+
+    async def get_columns_from_barclip(self, column_dict: dict[int, int], bar_start: str, bar_end: str):
+        return await super(BmsViewerFncStrategy, self).get_columns_from_barclip(column_dict, bar_start, bar_end)
+
+    async def sanitize_inputs(self, ctx, **kwargs):
+        try:
+            selected_song = ""
+            # next(x for x in SONG_LIST if x.title.lower() == kwargs["song"].lower())
+        except StopIteration:
+            return await ctx.response.send_message("Not really sure what song that is. Try using the "
+                                                   "autocomplete function and don't edit the results!", ephemeral=True)
+
+        try:
+            if int(kwargs["difficulty"]) not in [x.level for x in selected_song.diffs]:
+                raise ValueError
+        except ValueError:
+            return await ctx.response.send_message("Not really sure what difficulty that is. Try using the "
+                                                   "autocomplete function and don't edit the results!", ephemeral=True)
+
+        try:
+            bar_clip = kwargs["bar_clip"]
+            if bar_clip is None:
+                bar_clip = DEFAULT_BARCLIP
+            result = re.search(BARCLIP_REGEX, unidecode(bar_clip))
+            if len(result.groups()) != 2 or result.group(1) > result.group(2) or result is None:
+                raise ValueError
+        except ValueError:
+            return await ctx.response.send_message("The bar clip was not formatted correctly. Make sure the "
+                                                   "beginning and end values are numbers, separated by a hyphen "
+                                                   "(ex: 4-23).", ephemeral=True)
+        pass
+
+    async def get_song_url(self, **kwargs) -> str:
+        return f"https://sdvxplus.zip/unzip/{kwargs['song'].id}/{kwargs['difficulty'].idx}"
+
+    async def crop_image(self, local_file_path: str, start_column: int, end_column: int,
+                         use_doubles_spacing: bool) -> str:
+        return await super(BmsViewerFncStrategy, self).crop_image(local_file_path, start_column, end_column,
+                                                                 use_doubles_spacing)
+
+    async def create_embed(self, cropped_image_path: str, chart_url: str, **kwargs) -> Embed:
+        song = kwargs["song"]
+        difficulty = kwargs["difficulty"]
+
+        color = discord.Color.blue()
+        # next(x for x in LEVEL_MAPPINGS.values() if x["shorthand"].lower() == difficulty.name.lower())["color"]
+
+        embed = discord.Embed(color=color)
+        embed.set_author(name=f'{song.title} ({difficulty.name} {difficulty.level})')
+        embed.set_thumbnail(url=f'{SDVXPLUS_CLOUDFRONT}{difficulty.jacketPath}')
+        embed.add_field(name='Song Artist', value=f'{song.artist}')
+        embed.add_field(name='Effected By', value=f'{difficulty.effector}')
+        embed.add_field(name='sdvxplus URL', value=f'{await self.get_song_url(song=song, difficulty=difficulty)}',
+                        inline=False)
+        embed.set_image(url=f'attachment://{OUTPUT_FILE_NAME}')
+        return embed
+
+    async def get_measure_file_name(self, **kwargs):
+        return ""
+
+    async def measure_file_exists(self, **kwargs) -> bool:
+        return await super(BmsViewerFncStrategy, self).measure_file_exists(**kwargs)
+
+    async def get_measure_numbers_from_file(self, **kwargs) -> dict[int, int]:
+        return await super(BmsViewerFncStrategy, self).get_measure_numbers_from_file(**kwargs)
+
+    async def save_measure_numbers_to_file(self, measures: dict[int, int], **kwargs):
+        return await super(BmsViewerFncStrategy, self).save_measure_numbers_to_file(measures, **kwargs)
+
+    async def get_local_song_id_folder_plus_filename(self, **kwargs) -> str:
+        return ""
+
+    async def get_local_song_id_folder(self, **kwargs) -> str:
+        return f"{SONG_DATA_FOLDER}{self.game_title}/{str(kwargs['song'].id).zfill(4)}/"
+
+    async def get_songs(self):
+        return [x for x in BMS_SONGS]
+
+    async def get_song(self, **kwargs):
+        # Behaves a little bit different than other strategies - one title can map to
+        # multiple Songs unfortunately, so this returns all Songs with the title match ):
+        return [x for x in BMS_SONGS if x.title.lower() == kwargs["title"].lower()]
+
+    async def get_difficulties(self, **kwargs):
+        current_song_ids = [x.id for x in kwargs['songs']]
+        return [x for x in BMS_CHARTS if x.songID in current_song_ids]
+
+    async def get_difficulty(self, **kwargs):
+        return ""
+
+    async def get_tables(self, **kwargs):
+        return [x for x in TABLES if x.game == "bms"]
+
+    async def get_table(self, **kwargs):
+        return next(x for x in TABLES if x.title.lower() == kwargs["title"].lower() and x.game == "bms")
+
+    async def get_folders(self, **kwargs):
+        return [x for x in FOLDERS if x.game == "bms"]
+
+    async def get_folder(self, **kwargs):
+        raise next(x for x in FOLDERS if x.title.lower() == kwargs["title"].lower() and x.game == "bms")

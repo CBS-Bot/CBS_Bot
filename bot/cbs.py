@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import bot.exts.database as database
 from bot.exts.cogs.administrative import AdministrativeCog
 from bot.exts.cogs.animal import AnimalsCog
+from bot.exts.cogs.bmsviewer import BmsViewerCog
 from bot.exts.cogs.messagedetection import MessageDetectionCog
 from bot.exts.cogs.sdvxplus import SdvxPlusCog
 from bot.exts.cogs.sdvxindex import SdvxindexCog
@@ -72,5 +73,6 @@ async def main():
     await DISCORD_CLIENT.add_cog(SdvxindexCog(DISCORD_CLIENT))
     await DISCORD_CLIENT.add_cog(SdvxPlusCog(DISCORD_CLIENT))
     await DISCORD_CLIENT.add_cog(ThreeIceCreamCog(DISCORD_CLIENT))
+    await DISCORD_CLIENT.add_cog(BmsViewerCog(DISCORD_CLIENT))
     DISCORD_CLIENT.run(os.getenv('TOKEN'))
 

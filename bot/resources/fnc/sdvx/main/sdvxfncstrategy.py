@@ -173,5 +173,20 @@ class SdvxFncStrategy(FncStrategy):
     async def get_song(self, **kwargs):
         return next(x for x in SONG_LIST if x.title.lower() == kwargs["title"].lower())
 
+    async def get_difficulties(self, **kwargs):
+        raise NotImplementedError
+
     async def get_difficulty(self, **kwargs):
         return next(x for x in kwargs["song"].difficulties if x.level == int(kwargs["difficulty"]))
+
+    async def get_tables(self, **kwargs):
+        raise NotImplementedError
+
+    async def get_table(self, **kwargs):
+        raise NotImplementedError
+
+    async def get_folders(self, **kwargs):
+        raise NotImplementedError
+
+    async def get_folder(self, **kwargs):
+        raise NotImplementedError
