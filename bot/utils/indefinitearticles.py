@@ -19,7 +19,7 @@ def indefinite_article(noun_phrase):
         return u'an'
 
     if len(word) == 1:
-        if wordi in 'aedhilmnorsx':
+        if wordi in 'aefhilmnorsx':
             return u'an'
         else:
             return u'a'
