@@ -42,7 +42,7 @@ async def on_message(message):
     await DISCORD_CLIENT.process_commands(ctx.message)
 
 
-async def can_message(ctx):
+async def can_message(ctx): 
     # The bot owner or admin should always be able to run commands
     if await ctx.bot.is_owner(ctx.author) or ctx.permissions.administrator:
         return True
