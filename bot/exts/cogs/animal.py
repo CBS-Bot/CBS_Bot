@@ -66,7 +66,7 @@ class AnimalsCog(commands.Cog):
             ctx.author = member
             ctx.message.author = member
             self.true_random_animal.reset_cooldown(ctx)
-            await ctx.send(f"Resetted True Random Animal cooldown for member {member.name}.", ephemeral=True)
+            await ctx.send(f"Resetted True Random Animal cooldown for member {member.name}.")
 
     @random_animal.error
     @possum.error
