@@ -56,26 +56,27 @@ class FncStrategy(ABC):
         await self.sanitize_inputs(ctx, song=song, difficulty=difficulty, bar_clip=bar_clip)
         selected_song = await self.get_song(title=song)
         selected_difficulty = await self.get_difficulty(song=selected_song, difficulty=difficulty)
-        bar_start, bar_end = await self.get_barclip(bar_clip)
         chart_url = await self.get_song_url(song=selected_song, difficulty=selected_difficulty)
         local_file_path = await self.download_image_file(song=selected_song, difficulty=selected_difficulty)
-        use_doubles = await self.use_doubles_spacing(song=selected_song, difficulty=selected_difficulty)
 
-        measure_numbers: dict[int, int]
-        if await self.measure_file_exists(song=selected_song, difficulty=selected_difficulty):
-            measure_numbers = await self.get_measure_numbers_from_file(song=selected_song,
-                                                                       difficulty=selected_difficulty)
-        else:
-            measure_numbers = await self.get_measure_numbers_from_image(local_file_path, use_doubles)
-            measure_numbers = await self.adjust_measures(measure_numbers)
-            await self.save_measure_numbers_to_file(measure_numbers, song=selected_song,
-                                                    difficulty=selected_difficulty)
+        # bar_start, bar_end = await self.get_barclip(bar_clip)
+        # use_doubles = await self.use_doubles_spacing(song=selected_song, difficulty=selected_difficulty)
+        # measure_numbers: dict[int, int]
+        # if await self.measure_file_exists(song=selected_song, difficulty=selected_difficulty):
+        #     measure_numbers = await self.get_measure_numbers_from_file(song=selected_song,
+        #                                                                difficulty=selected_difficulty)
+        # else:
+        #     measure_numbers = await self.get_measure_numbers_from_image(local_file_path, use_doubles)
+        #     measure_numbers = await self.adjust_measures(measure_numbers)
+        #     await self.save_measure_numbers_to_file(measure_numbers, song=selected_song,
+        #                                             difficulty=selected_difficulty)
+        #
+        # start_column, end_column = await self.get_columns_from_barclip(measure_numbers, bar_start, bar_end)
+        # cropped_image_path = await self.crop_image(local_file_path, start_column, end_column, use_doubles)
 
-        start_column, end_column = await self.get_columns_from_barclip(measure_numbers, bar_start, bar_end)
-        cropped_image_path = await self.crop_image(local_file_path, start_column, end_column, use_doubles)
-        embed = await self.create_embed(cropped_image_path, chart_url, song=selected_song,
+        image_file = discord.File(local_file_path, filename=OUTPUT_FILE_NAME)
+        embed = await self.create_embed(local_file_path, chart_url, song=selected_song,
                                         difficulty=selected_difficulty)
-        image_file = discord.File(cropped_image_path)
         await ctx.followup.send(embed=embed, file=image_file)
 
     @abstractmethod
