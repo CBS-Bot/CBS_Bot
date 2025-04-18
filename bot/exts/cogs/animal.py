@@ -56,6 +56,7 @@ class AnimalsCog(commands.Cog):
     async def true_random_animal(self, ctx) -> None:
         random_animal = random.choice(get_args(ANIMAL_LITERAL))
         url = get_random_animal_image(random_animal)
+        logging.warning("Animal URL: " + url)
         embed, rating_file = create_animal_embed(url)
         await ctx.send(embed=embed, file=rating_file)
 
@@ -66,7 +67,7 @@ class AnimalsCog(commands.Cog):
             ctx.author = member
             ctx.message.author = member
             self.true_random_animal.reset_cooldown(ctx)
-            await ctx.send(f"Resetted True Random Animal cooldown for member {member.name}.")
+            await ctx.send(f"Reset True Random Animal cooldown for member <@!{member.id}>.")
 
     @random_animal.error
     @possum.error
