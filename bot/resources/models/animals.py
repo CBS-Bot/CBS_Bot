@@ -4,8 +4,8 @@ from definitions import ROOT_DIR
 
 
 ANIMAL_LITERAL = Literal["fox", "yeen", "dog", "manul", "snek", "poss", "serval", "bleat",
-                         "shiba", "racc", "dook", "ott", "snep", "woof", "capy", "bear", "bun",
-                         "caracal", "puma", "mane", "marten", "wah", "skunk", "jaguar", "yote"]
+                         "shiba", "racc", "dook", "ott", "snep", "capy", "bear", "bun",
+                         "caracal", "puma", "mane", "marten", "wah", "skunk", "yote"]
 
 RATING_MAPPINGS = {"MANWICH":{"weight": 0.001, "color": discord.Color.from_rgb(241, 216, 97),
                              "filename": "Manwich.png"},

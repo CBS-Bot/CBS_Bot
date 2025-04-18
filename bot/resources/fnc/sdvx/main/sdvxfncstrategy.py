@@ -52,7 +52,7 @@ class SdvxFncStrategy(FncStrategy):
         difficulty = kwargs["difficulty"]
 
         image = requests.get(f'https://sdvxindex.com{difficulty.columnPath}').content
-        filename = await self.get_local_song_id_folder_plus_filename(song=song, difficulty=difficulty)
+        filename = await self.get_local_song_id_folder_plus_filename(song=song, difficulty=difficulty) + ".png"
         if not os.path.isfile(filename):
             # Cache the file if it doesn't exist.
             path = await self.get_local_song_id_folder(song=song)
