@@ -60,14 +60,14 @@ class AnimalsCog(commands.Cog):
         embed, rating_file = create_animal_embed(url)
         await ctx.send(embed=embed, file=rating_file)
 
-    @commands.hybrid_command(name="resetanimalcooldown", description="(Owner/Admin only) Resets a user's cooldown for "
-                                                                     "/truerandomanimal.")
+    @commands.hybrid_command(name="resetanimalcooldown", description="Resets a user's cooldown for "
+                                                                     "/truerandomanimal. 1 time/user/week.")
+    @commands.cooldown(1, 604800, commands.BucketType.member)
     async def reset_true_random_animal(self, ctx, member: Member) -> None:
-        if await is_owner_or_admin(ctx):
-            ctx.author = member
-            ctx.message.author = member
-            self.true_random_animal.reset_cooldown(ctx)
-            await ctx.send(f"Reset True Random Animal cooldown for member <@!{member.id}>.")
+        ctx.author = member
+        ctx.message.author = member
+        self.true_random_animal.reset_cooldown(ctx)
+        await ctx.send(f"Reset True Random Animal cooldown for member <@!{member.id}>.")
 
     @random_animal.error
     @possum.error
