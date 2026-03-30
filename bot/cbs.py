@@ -13,8 +13,7 @@ from bot.exts.cogs.messagedetection import MessageDetectionCog
 from bot.exts.cogs.sdvxplus import SdvxPlusCog
 from bot.exts.cogs.sdvxindex import SdvxindexCog
 from bot.exts.cogs.threeicecream import ThreeIceCreamCog
-from bot.utils.detectionutils import check_message_for_matches
-
+from bot.utils.detectionutils import check_message_for_matches, add_reacts
 
 # Discord bot related junk
 INTENTS = discord.Intents.default()
@@ -34,6 +33,9 @@ async def on_message(message):
     # Check to see if we're allowed to send the message first
     if not await can_message(ctx):
         return
+
+    # Add any reacts to the message
+    await add_reacts(ctx)
 
     # See if the user has said any "key terms".
     await check_message_for_matches(ctx)

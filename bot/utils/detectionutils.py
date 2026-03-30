@@ -110,3 +110,10 @@ async def check_message_for_matches(ctx):
         insert_match_data(match_data)
         logging.warning(f"Message inserted into database. Message: {sanitized_message}. "
                         f"Guild: {ctx.message.guild.id}.")
+
+async def add_reacts(ctx):
+    # Check for a match, if it matches, add an appropriate react
+    sanitized_message = sanitize_message(ctx.message.content)
+
+    if 'bamco' in sanitized_message:
+        await ctx.message.add_reaction('💥')
