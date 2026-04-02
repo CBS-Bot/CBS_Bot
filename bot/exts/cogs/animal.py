@@ -1,6 +1,5 @@
 import discord
 import logging
-import os
 import random
 import requests
 import numpy as np
@@ -55,18 +54,11 @@ class AnimalsCog(commands.Cog):
                                                                   "1 time/user/day.")
     @commands.cooldown(1, 82800, commands.BucketType.member)
     async def true_random_animal(self, ctx) -> None:
-        # Get the worm folder and a list of all images in it
-        worm_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'resources', 'media', 'worm'))
-        worm_images = [f for f in os.listdir(worm_folder) if f.lower().endswith(('.jpg', '.jpeg'))]
-
-        # Randomly choose a worm
-        chosen_image = random.choice(worm_images)
-        image_path = os.path.join(worm_folder, chosen_image)
-        logging.warning(f"Chosen worm image: {image_path}")
-        worm_file = discord.File(image_path, filename="worm.jpg")
-
-        embed, rating_file = create_animal_embed(url=f"attachment://worm.jpg")
-        await ctx.send(embed=embed, files=[worm_file, rating_file])
+        random_animal = random.choice(get_args(ANIMAL_LITERAL))
+        url = get_random_animal_image(random_animal)
+        logging.warning("Animal URL: " + url)
+        embed, rating_file = create_animal_embed(url)
+        await ctx.send(embed=embed, file=rating_file)
 
     @commands.hybrid_command(name="resetanimalcooldown", description="(Owner/Admin only) Resets a user's cooldown for "
                                                                      "/truerandomanimal.")
