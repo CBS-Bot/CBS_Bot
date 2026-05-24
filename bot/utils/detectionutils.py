@@ -115,5 +115,5 @@ async def add_reacts(ctx):
     # Check for a match, if it matches, add an appropriate react
     sanitized_message = sanitize_message(ctx.message.content)
 
-    if 'bamco' in sanitized_message:
+    if 'bamco' in sanitized_message.lower():
         await ctx.message.add_reaction('💥')
