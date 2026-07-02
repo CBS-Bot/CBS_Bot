@@ -117,10 +117,3 @@ async def add_reacts(ctx):
 
     if 'bamco' in sanitized_message.lower():
         await ctx.message.add_reaction('💥')
-
-    # Add fire emoji in #bragging if the post has an image
-    if ctx.message.channel.name == 'bragging' and ctx.message.attachments:
-        for attachment in ctx.message.attachments:
-            if attachment.content_type and attachment.content_type.startswith('image/'):
-                await ctx.message.add_reaction('🔥')
-                break
